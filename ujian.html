@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Ujian Sekolah Online</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+    /* Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body, html {
+      height: 100%;
+      font-family: 'Roboto', sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+    #app {
+      background: white;
+      max-width: 480px;
+      width: 100%;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      min-height: 440px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      position: relative;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 24px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      flex-grow: 1;
+    }
+    label {
+      font-weight: 500;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      color: #34495e;
+      gap: 10px;
+    }
+    input[type="text"], input[type="number"], select {
+      padding: 10px 14px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1.8px solid #bdc3c7;
+      transition: border-color 0.3s ease;
+      width: 100%;
+      outline-offset: 2px;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, select:focus {
+      border-color: #2980b9;
+      outline: none;
+    }
+    .exam-question h3 {
+      margin-bottom: 12px;
+      color: #34495e;
+    }
+    .exam-options {
+      list-style: none;
+      padding-left: 0;
+    }
+    .exam-options li {
+      margin-bottom: 8px;
+    }
+    .exam-options input[type="radio"] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #2980b9;
+      position: relative;
+      cursor: pointer;
+      outline-offset: 3px;
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+    .exam-options input[type="radio"]:checked {
+      background-color: #2980b9;
+      box-shadow: 0 0 6px #2980b9;
+    }
+    .exam-options input[type="radio"]:focus {
+      box-shadow: 0 0 3px 3px #8ec1ff;
+    }
+    button {
+      margin-top: 12px;
+      padding: 12px 18px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      background: #2980b9;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      min-width: 100px;
+    }
+    button:hover:not(:disabled) {
+      background: #1f5f8b;
+    }
+    button:disabled {
+      background: #a0aec0;
+      cursor: not-allowed;
+    }
+    .btn-group {
+      display: flex;
+      justify-content: space-between;
+      margin-top: auto;
+    }
+    .error-message {
+      color: #c0392b;
+      margin-top: -10px;
+      margin-bottom: 10px;
+      font-weight: 600;
+      text-align: center;
+      min-height: 22px;
+    }
+    #result {
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #27ae60;
+      margin-top: 20px;
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Hamburger menu button */
+    #hamburger-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 28px;
+      height: 22px;
+      cursor: pointer;
+      z-index: 1001;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    #hamburger-btn span {
+      display: block;
+      height: 4px;
+      background-color: #2980b9;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    #hamburger-btn.open span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+    #hamburger-btn.open span:nth-child(2) {
+      opacity: 0;
+    }
+    #hamburger-btn.open span:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    /* Side panel for question list */
+    #side-panel {
+      position: fixed;
+      top: 0;
+      right: -280px;
+      width: 260px;
+      height: 100vh;
+      background: white;
+      box-shadow: -3px 0 15px rgba(0,0,0,0.15);
+      padding: 20px;
+      box-sizing: border-box;
+      transition: right 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+    #side-panel.open {
+      right: 0;
+    }
+    #side-panel h3 {
+      margin-bottom: 20px;
+      color: #2c3e50;
+      text-align: center;
+    }
+    #question-list {
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+    #question-list button {
+      width: 100%;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      padding: 12px 10px;
+      text-align: center;
+      background: #ecf0f1;
+      color: #34495e;
+      font-weight: 600;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    #question-list button:hover {
+      background-color: #d4d9de;
+    }
+    #question-list button.active {
+      background-color: #2980b9;
+      color: white;
+      border-color: #1f5f8b;
+      cursor: default;
+    }
+    #side-panel-close {
+      align-self: center;
+      margin-top: 10px;
+      background: transparent;
+      border: none;
+      color: #2980b9;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+
+    /* User blocked overlay */
+    #blocked-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.85);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+      z-index: 2000;
+      font-size: 1.2rem;
+      user-select: none;
+    }
+    #blocked-overlay h1 {
+      margin-bottom: 16px;
+      font-size: 2rem;
+    }
+    #blocked-overlay p {
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
+    /* Device blocked overlay */
+    #device-blocked-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(50, 0, 0, 0.9);
+      color: #f88;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+      z-index: 3000;
+      font-size: 1.3rem;
+      user-select: none;
+    }
+    #device-blocked-overlay h1 {
+      margin-bottom: 16px;
+      font-size: 2.4rem;
+      color: #ff4444;
+    }
+    #device-blocked-overlay p {
+      max-width: 360px;
+      line-height: 1.5;
+      font-weight: 700;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      #app {
+        padding: 24px 20px;
+        min-height: auto;
+      }
+      .btn-group {
+        flex-direction: column;
+        gap: 10px;
+      }
+      button {
+        width: 100%;
+        min-width: auto;
+      }
+      #side-panel {
+        width: 80vw;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" role="main" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Hamburger menu button -->
+  <div id="hamburger-btn" role="button" aria-label="Menu navigasi soal" tabindex="0" aria-expanded="false" aria-controls="side-panel">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+  <!-- Side panel -->
+  <aside id="side-panel" aria-label="Daftar soal">
+    <h3>Daftar Soal</h3>
+    <div id="question-list" role="list"></div>
+    <button id="side-panel-close" aria-label="Tutup daftar soal">&times; Tutup</button>
+  </aside>
+
+  <script>
+    const database = [
+      { name: "Andi Putra", class: "10", absen: 1 },
+      { name: "Budi Santoso", class: "10", absen: 5 },
+      { name: "Citra Dewi", class: "11", absen: 2 },
+      { name: "Dewi Laras", class: "11", absen: 10 },
+      { name: "Reynal", class: "10", absen: 10 }
+    ];
+
+    const app = document.getElementById('app');
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const sidePanel = document.getElementById('side-panel');
+    const questionList = document.getElementById('question-list');
+    const sidePanelCloseBtn = document.getElementById('side-panel-close');
+    const blockedOverlay = document.getElementById('blocked-overlay');
+    const deviceBlockedOverlay = document.getElementById('device-blocked-overlay');
+
+    const questions = [
+      {
+        question: "Apa warna yang di sukai xzhee?",
+        options: {
+          a: "hitam",
+          b: "biru",
+          c: "pink"
+          d: "ungu"
+        },
+        correct: "b"
+      },
+      {
+        question: "Siapa sebenarnya xzhee?",
+        options: {
+          a: "alomani",
+          b: "pemula",
+          c: "sepuh",
+          d: "kang coli"
+        },
+        correct: "b"
+      },
+      {
+        question: "Main game apa Xzhee?",
+        options: {
+          a: "epep",
+          b: "emel",
+          c: "pabji",
+          d: "blod strike"
+        },
+        correct: "d"
+      },
+      {
+        question: "Kelas berapa xzhee?",
+        options: {
+          a: "2sd",
+          b: "1smp",
+          c: "2sma",
+          d: "3sd"
+        },
+        correct: "d"
+      },
+      {
+        question: "Akhirnya nomor xzhee",
+        options: {
+          a: "3922",
+          b: "726",
+          c: "0872",
+          d: "1885"
+        },
+        correct: "d"
+      }
+    ];
+
+    let currentUser = null;
+    let currentStep = 0;
+    let answers = Array(questions.length).fill(null);
+    let examStarted = false;
+    const MAX_FORCE_ATTEMPTS = 5;
+    const FORCE_BLOCK_KEY = 'device_blocked';
+    const FORCE_ATTEMPTS_KEY = 'force_attempts';
+
+    function getBlockKey(user) {
+      return user ? `blocked_${user.name.toLowerCase()}_${user.class}_${user.absen}` : null;
+    }
+
+    function isUserBlocked(user) {
+      const bk = getBlockKey(user);
+      return bk && localStorage.getItem(bk) === 'true';
+    }
+
+    function blockUser(user) {
+      const bk = getBlockKey(user);
+      if (bk) localStorage.setItem(bk, 'true');
+    }
+
+    function isDeviceBlocked() {
+      return localStorage.getItem(FORCE_BLOCK_KEY) === 'true';
+    }
+
+    function blockDevice() {
+      localStorage.setItem(FORCE_BLOCK_KEY, 'true');
+    }
+
+    function resetForceAttempts() {
+      localStorage.setItem(FORCE_ATTEMPTS_KEY, '0');
+    }
+
+    function incrementForceAttempts() {
+      let count = parseInt(localStorage.getItem(FORCE_ATTEMPTS_KEY)||'0',10);
+      count++;
+      localStorage.setItem(FORCE_ATTEMPTS_KEY, count.toString());
+      if (count >= MAX_FORCE_ATTEMPTS) {
+        blockDevice();
+        showDeviceBlocked();
+      }
+    }
+
+    function showBlocked() {
+      blockedOverlay.hidden = false;
+      app.hidden = true;
+      hamburgerBtn.style.display = 'none';
+      sidePanel.classList.remove('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideBlocked() {
+      blockedOverlay.hidden = true;
+      app.hidden = false;
+      document.body.style.overflow = '';
+    }
+
+    function showDeviceBlocked() {
+      deviceBlockedOverlay.hidden = false;
+      app.hidden = true;
+      hamburgerBtn.style.display = 'none';
+      sidePanel.classList.remove('open');
+      blockedOverlay.hidden = true;
+      document.body.style.overflow = 'hidden';
+    }
+
+    if(isDeviceBlocked()) {
+      showDeviceBlocked();
+    } else {
+      renderLogin();
+    }
+
+    function renderLogin() {
+      app.innerHTML = `
+        <h1>Login Ujian Sekolah</h1>
+        <form id="login-form" novalidate>
+          <label for="name">Nama Lengkap</label>
+          <input type="text" id="name" name="name" required autocomplete="off" placeholder="Masukkan nama lengkap" />
+          <label for="class">Kelas</label>
+          <select id="class" name="class" required>
+            <option value="" disabled selected>Pilih kelas</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+          </select>
+          <label for="absen">Nomor Absen</label>
+          <input type="number" id="absen" name="absen" required min="1" max="50" placeholder="Masukkan nomor absen" />
+          <div class="error-message" id="login-error" role="alert" aria-live="assertive"></div>
+          <button type="submit" id="login-submit-btn">Masuk & Lanjutkan</button>
+        </form>
+      `;
+      const loginForm = document.getElementById('login-form');
+      const loginError = document.getElementById('login-error');
+      const loginSubmitBtn = document.getElementById('login-submit-btn');
+
+      loginForm.addEventListener('submit', function(e){
+        e.preventDefault();
+        loginError.textContent='';
+        loginSubmitBtn.disabled=true;
+
+        if(isDeviceBlocked()){
+          showDeviceBlocked();
+          loginSubmitBtn.disabled=false;
+          return;
+        }
+
+        const name = loginForm.name.value.trim();
+        const cls = loginForm.class.value;
+        const absen = loginForm.absen.value.trim();
+
+        if(!name||!cls||!absen){
+          loginError.textContent = 'Semua kolom harus diisi.';
+          loginSubmitBtn.disabled=false;
+          return;
+        }
+
+        if(!(parseInt(absen)>0)){
+          loginError.textContent='Nomor absen harus angka positif.';
+          loginSubmitBtn.disabled=false;
+          return;
+        }
+
+        const userFound = database.find(u=> 
+          u.name.toLowerCase()===name.toLowerCase() &&
+          u.class===cls &&
+          u.absen.toString()===absen
+        );
+
+        if(!userFound){
+          loginError.textContent='Data tidak ditemukan. Periksa kembali nama, kelas, dan nomor absen.';
+          loginSubmitBtn.disabled=false;
+          return;
+        }
+
+        if(isUserBlocked(userFound)){
+          loginError.textContent='Akun Anda terblokir. Hubungi administrator atau edit berkas index untuk membuka blokir.';
+          incrementForceAttempts();
+          loginSubmitBtn.disabled=false;
+          return;
+        }
+
+        resetForceAttempts();
+
+        currentUser=userFound;
+        showSoalPage();
+        loginSubmitBtn.disabled=false;
+        setupBlockingDetection();
+      });
+    }
+
+    function setupBlockingDetection(){
+      if(examStarted) return;
+      examStarted=true;
+
+      document.addEventListener('visibilitychange', ()=>{
+        if(document.visibilityState !== 'visible'){
+          handleUserBlockedOnExit();
+        }
+      });
+
+      window.addEventListener('blur', ()=>{
+        handleUserBlockedOnExit();
+      });
+    }
+
+    function handleUserBlockedOnExit(){
+      if(!currentUser || !examStarted) return;
+      blockUser(currentUser);
+      examStarted=false;
+      showBlocked();
+      setTimeout(()=>{
+        hideBlocked();
+        showSoalPage(true);
+      },4000);
+    }
+
+    hamburgerBtn.addEventListener('click', toggleSidePanel);
+    hamburgerBtn.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleSidePanel();
+      }
+    });
+
+    function toggleSidePanel(){
+      const open = sidePanel.classList.toggle('open');
+      hamburgerBtn.setAttribute('aria-expanded', open);
+      if(open){
+        renderQuestionList();
+      }
+    }
+
+    sidePanelCloseBtn.addEventListener('click', () => {
+      sidePanel.classList.remove('open');
+      hamburgerBtn.setAttribute('aria-expanded', false);
+      hamburgerBtn.focus();
+    });
+
+    function renderQuestionList(){
+      questionList.innerHTML = '';
+      questions.forEach((_, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = `Soal ${idx + 1}`;
+        btn.className = idx === currentStep ? 'active' : '';
+        btn.setAttribute('aria-current', idx === currentStep ? 'step' : 'false');
+        btn.addEventListener('click', () => {
+          if(currentStep !== idx){
+            currentStep = idx;
+            sidePanel.classList.remove('open');
+            hamburgerBtn.setAttribute('aria-expanded', false);
+            hamburgerBtn.focus();
+            renderQuestion();
+          }
+        });
+        questionList.appendChild(btn);
+      });
+    }
+
+    function showSoalPage(afterBlock = false){
+      answers = Array(questions.length).fill(null);
+      currentStep = 0;
+      examStarted = false;
+      hamburgerBtn.style.display = 'none';
+      app.innerHTML = `
+        <h2>Soal</h2>
+        <p style="text-align:center; margin-bottom:24px;">
+          Selamat datang, <strong>${escapeHtml(currentUser.name)}</strong>.<br>
+          Tekan tombol <em>Kerjakan</em> untuk memulai ujian.
+          ${afterBlock ? '<br><br><strong style="color:red;">Anda terblokir sebelumnya karena meninggalkan halaman ujian.</strong>' : ''}
+        </p>
+        <div style="text-align:center;">
+          <button id="start-exam-btn" aria-label="Mulai mengerjakan soal">Kerjakan</button>
+        </div>
+      `;
+
+      document.getElementById('start-exam-btn').addEventListener('click', () => {
+        currentStep = 0;
+        answers = Array(questions.length).fill(null);
+        examStarted = true;
+        renderQuestion();
+      });
+    }
+
+    function renderQuestion(){
+      const q = questions[currentStep];
+      const userAnswer = answers[currentStep];
+
+      app.innerHTML = `
+        <h2>Soal ${currentStep + 1} dari ${questions.length}</h2>
+        <form id="exam-form" aria-live="polite">
+          <div class="exam-question" aria-label="Pertanyaan">
+            <h3 id="q-label">${escapeHtml(q.question)}</h3>
+            <ul class="exam-options" role="radiogroup" aria-labelledby="q-label">
+              ${Object.entries(q.options).map(([key, val]) => `
+                <li>
+                  <label>
+                    <input type="radio" name="answer" value="${key}" ${userAnswer === key ? 'checked' : ''} required />
+                    <span>${key}.</span> ${escapeHtml(val)}
+                  </label>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+          <div class="btn-group" role="group" aria-label="Navigasi soal">
+            <button type="button" id="back-btn" ${currentStep === 0 ? 'disabled aria-disabled="true"' : ''}>Back</button>
+            ${currentStep < questions.length - 1 ?
+              `<button type="submit" id="next-btn" disabled>Next</button>` :
+              `<button type="submit" id="submit-btn" disabled>Kirim Jawaban</button>`
+            }
+          </div>
+          <div class="error-message" id="answer-error" role="alert" aria-live="assertive"></div>
+        </form>
+      `;
+
+      hamburgerBtn.style.display = 'flex';
+      const examForm = document.getElementById('exam-form');
+      const backBtn = document.getElementById('back-btn');
+      const nextBtn = document.getElementById('next-btn') || document.getElementById('submit-btn');
+      const answerError = document.getElementById('answer-error');
+
+      if(userAnswer !== null){
+        nextBtn.disabled = false;
+        nextBtn.removeAttribute('aria-disabled');
+      }
+
+      Array.from(examForm.answer).forEach(radio => {
+        radio.addEventListener('change', () => {
+          nextBtn.disabled = false;
+          nextBtn.removeAttribute('aria-disabled');
+          answerError.textContent = '';
+        });
+      });
+
+      backBtn.addEventListener('click', () => {
+        saveAnswer();
+        if(currentStep > 0){
+          currentStep--;
+          renderQuestion();
+        }
+      });
+
+      examForm.addEventListener('submit', e => {
+        e.preventDefault();
+        if(!examForm.answer.value){
+          answerError.textContent = 'Silakan pilih jawaban terlebih dahulu.';
+          nextBtn.disabled = true;
+          nextBtn.setAttribute('aria-disabled', 'true');
+          return;
+        }
+        saveAnswer();
+        answerError.textContent = '';
+        if(currentStep < questions.length - 1){
+          currentStep++;
+          renderQuestion();
+        } else {
+          sidePanel.classList.remove('open');
+          hamburgerBtn.setAttribute('aria-expanded', false);
+          showConfirmationPage();
+        }
+      });
+    }
+
+    function saveAnswer(){
+      const examForm = document.getElementById('exam-form');
+      const selected = examForm.answer.value;
+      answers[currentStep] = selected;
+    }
+
+    function showConfirmationPage(){
+      const answeredCount = answers.filter(a => a !== null).length;
+      app.innerHTML = `
+        <h2>Konfirmasi Pengiriman Jawaban</h2>
+        <p style="text-align:center; margin-bottom:24px;">
+          Apakah jawaban Anda sudah semua? Silakan cek kembali.<br>
+          Anda sudah menjawab <strong>${answeredCount}</strong> dari <strong>${questions.length}</strong> soal.
+        </p>
+        <div class="btn-group" style="justify-content:center; gap:20px;">
+          <button id="back-to-review-btn">Back (Cek Kembali)</button>
+          <button id="next-to-score-btn">Next (Lihat Skor)</button>
+        </div>
+      `;
+      hamburgerBtn.style.display = 'none';
+
+      document.getElementById('back-to-review-btn').addEventListener('click', () => {
+        currentStep = 0;
+        renderQuestion();
+      });
+
+      document.getElementById('next-to-score-btn').addEventListener('click', () => {
+        showResultPage();
+      });
+    }
+
+    function showResultPage(){
+      let score = 0;
+      for(let i = 0; i < questions.length; i++){
+        if(answers[i] === questions[i].correct) score++;
+      }
+      app.innerHTML = `
+        <h2>Hasil Ujian</h2>
+        <p style="text-align:center; font-size: 1.3rem; font-weight: 600; margin-bottom: 30px;">
+          Skor Anda: ${score} dari ${questions.length}
+        </p>
+        <div style="text-align: center;">
+          <button id="restart-btn">Ulangi Ujian</button>
+        </div>
+      `;
+      hamburgerBtn.style.display = 'none';
+
+      document.getElementById('restart-btn').addEventListener('click', () => {
+        resetAll();
+      });
+    }
+
+    function resetAll(){
+      currentUser = null;
+      currentStep = 0;
+      answers = Array(questions.length).fill(null);
+      examStarted = false;
+      hideBlocked();
+      deviceBlockedOverlay.hidden = true;
+      app.hidden = false;
+      hamburgerBtn.style.display = 'none';
+      resetForceAttempts();
+      renderLogin();
+    }
+
+    function escapeHtml(text){
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
